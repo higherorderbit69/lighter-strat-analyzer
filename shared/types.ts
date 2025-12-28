@@ -17,15 +17,15 @@ export const DEFAULT_MARKETS: Market[] = [
     { symbol: "BTC", marketIndex: 0, marketId: 1 },
     { symbol: "ETH", marketIndex: 1, marketId: 0 },
     { symbol: "SOL", marketIndex: 2, marketId: 2 },
-    { symbol: "DOGE", marketIndex: 3, marketId: 3 },
-    { symbol: "1000PEPE", marketIndex: 4, marketId: 4 },
-    { symbol: "WIF", marketIndex: 5, marketId: 5 },
-    { symbol: "WLD", marketIndex: 6, marketId: 6 },
+    { symbol: "HYPE", marketIndex: 3, marketId: 24 },
+    { symbol: "FARTCOIN", marketIndex: 4, marketId: 21 },
+    { symbol: "BNB", marketIndex: 5, marketId: 25 },
+    { symbol: "AAVE", marketIndex: 6, marketId: 27 },
     { symbol: "XRP", marketIndex: 7, marketId: 7 },
-    { symbol: "LINK", marketIndex: 8, marketId: 8 },
-    { symbol: "AVAX", marketIndex: 9, marketId: 9 },
+    { symbol: "XMR", marketIndex: 8, marketId: 77 },
+    { symbol: "ZEC", marketIndex: 9, marketId: 90 },
     { symbol: "FARTCOIN", marketIndex: 10, marketId: 21 },
-    { symbol: "HYPE", marketIndex: 11, marketId: 24 },
+    { symbol: "PUMP", marketIndex: 11, marketId: 45 },
 ];
 
 // Candle with Strat classification
