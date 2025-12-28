@@ -152,7 +152,7 @@ export default function Home() {
                 size="sm"
                 onClick={() => refetch()}
                 disabled={analysisLoading}
-                className="gap-2 border-secondary/50 hover:bg-secondary/20 hover:border-secondary"
+                className="gap-2 !border !border-cyan-500/50 hover:bg-cyan-500/20 hover:!border-cyan-400"
               >
                 <RefreshCw className={cn("w-4 h-4", analysisLoading && "animate-spin")} />
                 <span className="font-mono text-xs tracking-wider hidden sm:inline">REFRESH</span>

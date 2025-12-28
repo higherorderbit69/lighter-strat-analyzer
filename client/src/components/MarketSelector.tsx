@@ -41,13 +41,13 @@ export function MarketSelector({
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          className="gap-2 border-primary/50 hover:bg-primary/20 hover:border-primary"
+          className="gap-2 !border !border-[#a855f7]/50 hover:bg-[#a855f7]/20 hover:!border-[#a855f7]"
         >
           <Plus className="w-4 h-4" />
           <span className="font-mono text-xs tracking-wider">ADD MARKETS</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-card border-primary/30 max-w-md">
+      <DialogContent className="bg-black/90 backdrop-blur-xl border-primary/30 max-w-md">
         <DialogHeader>
           <DialogTitle className="text-primary neon-glow-pink tracking-wider">
             SELECT MARKETS
@@ -60,7 +60,7 @@ export function MarketSelector({
             placeholder="Search markets..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-background/50 border-border/50 font-mono"
+            className="pl-10 bg-black/40 border-primary/30 focus:border-primary/50 font-mono text-foreground placeholder:text-muted-foreground"
           />
         </div>
 
@@ -79,10 +79,10 @@ export function MarketSelector({
                     onClick={() => onToggleMarket(market)}
                     className={cn(
                       "flex items-center justify-between p-3 rounded border transition-all",
-                      "hover:bg-primary/10",
+                      "hover:bg-primary/10 hover:border-primary/50",
                       selected
-                        ? "border-primary bg-primary/20"
-                        : "border-border/30 bg-card/50"
+                        ? "border-primary bg-[#c026d3]/35"
+                        : "border-border/20 bg-black/30"
                     )}
                   >
                     <span
