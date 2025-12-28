@@ -51,7 +51,10 @@ export default function Home() {
   const [refreshInterval, setRefreshInterval] = useState("30000");
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const [, setLocation] = useLocation();
-  const [ftcEnabled, setFtcEnabled] = useState(false);
+  const [ftcEnabled, setFtcEnabled] = useState(() => {
+    const stored = localStorage.getItem("lighter-ftc-enabled");
+    return stored === "true";
+  });
 
   // Fetch all available markets
   const { data: allMarkets, isLoading: marketsLoading } = trpc.strat.getMarkets.useQuery();
@@ -104,6 +107,11 @@ export default function Home() {
   useEffect(() => {
     localStorage.setItem("lighter-timeframe", timeframe);
   }, [timeframe]);
+
+  // Save FTC toggle state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("lighter-ftc-enabled", ftcEnabled.toString());
+  }, [ftcEnabled]);
 
   const handleToggleMarket = useCallback((market: Market) => {
     setSelectedMarkets((prev) => {
