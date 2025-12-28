@@ -7,8 +7,7 @@
 
 ## 🚀 Live Application
 
-**Frontend:** https://lighter-strat-analyzer.vercel.app  
-**Backend API:** https://lighter-strat-api.onrender.com
+**[View Live Demo →](https://lighter-strat-analyzer.vercel.app)**
 
 ## ✨ Features
 
