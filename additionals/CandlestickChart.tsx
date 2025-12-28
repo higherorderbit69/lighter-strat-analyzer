@@ -10,7 +10,7 @@ interface CandlestickChartProps {
 }
 
 const PATTERN_COLORS: Record<StratPatternType, string> = {
-  "1": "#facc15", // yellow (Inside Bar)
+  "1": "#22d3ee", // cyan
   "2U": "#4ade80", // green
   "2D": "#f87171", // red
   "3": "#f472b6", // pink
@@ -121,7 +121,7 @@ export function CandlestickChart({
       // Draw pattern indicator
       if (candle.patternType) {
         const patternColor = PATTERN_COLORS[candle.patternType];
-
+        
         // Pattern dot above candle
         ctx.beginPath();
         ctx.arc(x, highY - 8, 3, 0, Math.PI * 2);

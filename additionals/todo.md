@@ -27,3 +27,6 @@
 ## Testing
 - [x] Unit tests for Strat pattern classification logic
 - [x] API integration tests
+
+## Bug Fixes
+- [ ] Fix refresh button not working on dashboard

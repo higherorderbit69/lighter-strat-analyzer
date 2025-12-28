@@ -1,0 +1,166 @@
+/**
+ * Strat Analysis tRPC Router
+ * Handles market listing and pattern analysis endpoints
+ */
+
+import { z } from "zod";
+import { publicProcedure, router } from "../trpc";
+import { fetchOrderBooks, fetchCandles, convertCandle } from "../lib/lighterApi";
+import { analyzeCandles } from "../lib/stratAnalyzer";
+import type { Market, Timeframe, MarketAnalysis } from "@shared/types";
+import { TIMEFRAMES, DEFAULT_MARKETS } from "@shared/types";
+
+export const stratRouter = router({
+    /**
+     * Get all available markets from Lighter.xyz
+     */
+    getMarkets: publicProcedure.query(async (): Promise<Market[]> => {
+        try {
+            const markets = await fetchOrderBooks();
+            return markets;
+        } catch (error) {
+            console.error("Failed to fetch markets:", error);
+            // Return defaults on error
+            return DEFAULT_MARKETS;
+        }
+    }),
+
+    /**
+     * Analyze multiple markets for Strat patterns
+     */
+    analyzeMultipleMarkets: publicProcedure
+        .input(
+            z.object({
+                markets: z.array(
+                    z.object({
+                        symbol: z.string(),
+                        marketIndex: z.number(),
+                        marketId: z.number(),
+                    })
+                ),
+                timeframe: z.enum([...TIMEFRAMES]),
+                candleCount: z.number().min(5).max(100).default(20),
+            })
+        )
+        .query(async ({ input }): Promise<MarketAnalysis[]> => {
+            const { markets, timeframe, candleCount } = input;
+
+            const analyses: MarketAnalysis[] = await Promise.all(
+                markets.map(async (market) => {
+                    try {
+                        // Fetch candles from Lighter.xyz
+                        const rawCandles = await fetchCandles(
+                            market.marketId,
+                            timeframe as Timeframe,
+                            candleCount
+                        );
+
+                        // Convert and analyze
+                        const convertedCandles = rawCandles.map(convertCandle);
+                        const { candles, patternSequence, actionableSetup } = analyzeCandles(convertedCandles);
+
+                        return {
+                            market,
+                            candles,
+                            currentCandle: candles.length > 0 ? candles[candles.length - 1] : null,
+                            patternSequence,
+                            actionableSetup,
+                        };
+                    } catch (error) {
+                        console.error(`Failed to analyze ${market.symbol}:`, error);
+                        return {
+                            market,
+                            candles: [],
+                            currentCandle: null,
+                            patternSequence: "",
+                            actionableSetup: null,
+                        };
+                    }
+                })
+            );
+
+            return analyses;
+        }),
+
+    /**
+     * Analyze a single market (for chart page)
+     */
+    analyzeSingleMarket: publicProcedure
+        .input(
+            z.object({
+                marketId: z.number(),
+                symbol: z.string(),
+                marketIndex: z.number(),
+                timeframe: z.enum([...TIMEFRAMES]),
+                candleCount: z.number().min(5).max(500).default(100),
+            })
+        )
+        .query(async ({ input }): Promise<MarketAnalysis> => {
+            const { marketId, symbol, marketIndex, timeframe, candleCount } = input;
+            const market: Market = { symbol, marketIndex, marketId };
+
+            try {
+                const rawCandles = await fetchCandles(marketId, timeframe as Timeframe, candleCount);
+                const convertedCandles = rawCandles.map(convertCandle);
+                const { candles, patternSequence, actionableSetup } = analyzeCandles(convertedCandles);
+
+                return {
+                    market,
+                    candles,
+                    currentCandle: candles.length > 0 ? candles[candles.length - 1] : null,
+                    patternSequence,
+                    actionableSetup,
+                };
+            } catch (error) {
+                console.error(`Failed to analyze ${symbol}:`, error);
+                return {
+                    market,
+                    candles: [],
+                    currentCandle: null,
+                    patternSequence: "",
+                    actionableSetup: null,
+                };
+            }
+        }),
+
+    /**
+     * Get candles with pattern analysis for chart page
+     * Uses marketIndex to look up marketId from DEFAULT_MARKETS
+     */
+    getCandles: publicProcedure
+        .input(
+            z.object({
+                marketIndex: z.number(),
+                timeframe: z.enum([...TIMEFRAMES]),
+                candleCount: z.number().min(5).max(200).default(50),
+            })
+        )
+        .query(async ({ input }) => {
+            const { marketIndex, timeframe, candleCount } = input;
+
+            // Look up market by index
+            const market = DEFAULT_MARKETS.find(m => m.marketIndex === marketIndex);
+            if (!market) {
+                throw new Error(`Market not found for index ${marketIndex}`);
+            }
+
+            try {
+                const rawCandles = await fetchCandles(market.marketId, timeframe as Timeframe, candleCount);
+                const convertedCandles = rawCandles.map(convertCandle);
+                const { candles, patternSequence, actionableSetup } = analyzeCandles(convertedCandles);
+
+                return {
+                    candles,
+                    patternSequence,
+                    actionableSetup,
+                };
+            } catch (error) {
+                console.error(`Failed to get candles for ${market.symbol}:`, error);
+                return {
+                    candles: [],
+                    patternSequence: "",
+                    actionableSetup: null,
+                };
+            }
+        }),
+});
