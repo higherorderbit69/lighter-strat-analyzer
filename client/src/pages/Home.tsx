@@ -51,9 +51,9 @@ export default function Home() {
 
   const handleToggleMarket = useCallback((market: Market) => {
     setSelectedMarkets((prev) => {
-      const exists = prev.some((m) => m.marketIndex === market.marketIndex);
+      const exists = prev.some((m) => m.marketId === market.marketId);
       if (exists) {
-        return prev.filter((m) => m.marketIndex !== market.marketIndex);
+        return prev.filter((m) => m.marketId !== market.marketId);
       }
       return [...prev, market];
     });
@@ -93,7 +93,7 @@ export default function Home() {
             {/* Controls */}
             <div className="flex flex-wrap items-center gap-3">
               <TimeframeSelector selected={timeframe} onChange={setTimeframe} />
-              
+
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-muted-foreground" />
                 <Select value={refreshInterval} onValueChange={setRefreshInterval}>
@@ -144,7 +144,7 @@ export default function Home() {
               <div className="text-xs text-muted-foreground tracking-wider">MARKETS</div>
             </div>
           </HudFrame>
-          
+
           <HudFrame className="bg-card/30">
             <div className="text-center">
               <div className="text-2xl font-bold font-mono text-secondary neon-glow-cyan">
@@ -153,7 +153,7 @@ export default function Home() {
               <div className="text-xs text-muted-foreground tracking-wider">TIMEFRAME</div>
             </div>
           </HudFrame>
-          
+
           <HudFrame variant={actionableCount > 0 ? "highlight" : "default"} className="bg-card/30">
             <div className="text-center">
               <div className={cn(
@@ -168,7 +168,7 @@ export default function Home() {
               </div>
             </div>
           </HudFrame>
-          
+
           <HudFrame className="bg-card/30">
             <div className="text-center">
               <div className="text-sm font-mono text-muted-foreground">

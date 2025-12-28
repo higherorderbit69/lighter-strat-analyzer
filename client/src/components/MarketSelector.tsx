@@ -34,7 +34,7 @@ export function MarketSelector({
   );
 
   const isSelected = (market: Market) =>
-    selectedMarkets.some((m) => m.marketIndex === market.marketIndex);
+    selectedMarkets.some((m) => m.marketId === market.marketId);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
