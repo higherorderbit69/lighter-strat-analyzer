@@ -12,11 +12,13 @@
 
 ## ✨ Features
 
-- **12 Markets:** BTC, ETH, SOL, DOGE, PEPE, WIF, WLD, XRP, LINK, AVAX, FARTCOIN, HYPE
-- **Multiple Timeframes:** 1m, 5m, 15m, 30m, 1h, 4h, 12h, 1d, 1w
+- **12 Markets:** BTC, ETH, SOL, HYPE, FARTCOIN, BNB, AAVE, XRP, XMR, ZEC, PUMP
+- **Multiple Timeframes:** 1m, 5m, 15m, 30m, 1h, 4h, 12h, 1d
+- **Full Timeframe Continuity (FTC):** Analyze all 8 timeframes simultaneously with confluence metrics
 - **Real-Time Pattern Detection:** Inside Bar, Directional Up/Down, Outside Bar
 - **Predictive Signals:** Setup patterns and triggered breakouts
 - **Interactive Charts:** Click any market for detailed candlestick analysis
+- **Smart Caching:** Tiered caching (30s to 4h TTL) with rate limiting for optimal performance
 - **Dark Cyberpunk UI:** Neon accents with smooth animations
 
 ## 🎯 The Strat Patterns
@@ -26,7 +28,7 @@
 | **1** (Inside Bar) | 🟡 Yellow | Consolidation - potential breakout setup |
 | **2U** (Directional Up) | 🟢 Green | Bullish directional movement |
 | **2D** (Directional Down) | 🔴 Red | Bearish directional movement |
-| **3** (Outside Bar) | 🩷 Pink | Volatility expansion |
+| **3** (Outside Bar) | 🟣 Purple | Volatility expansion |
 
 ## 🛠️ Tech Stack
 
@@ -41,6 +43,7 @@
 - Node.js + Express
 - tRPC v11
 - TypeScript
+- dotenv (environment configuration)
 - Lighter.xyz API integration
 
 ## 📦 Project Structure
@@ -54,11 +57,13 @@ lighter-strat-analyzer/
 │   │   └── lib/         # tRPC client
 │   └── package.json
 ├── server/              # Backend (Express + tRPC)
-│   ├── lib/             # API clients & analyzers
+│   ├── lib/             # API clients, analyzers, FTC service
 │   ├── routers/         # tRPC routers
+│   ├── __tests__/       # Unit tests
 │   └── index.ts
 ├── shared/              # Shared types & constants
-│   └── types.ts         # ⭐ Edit here to add/remove markets
+│   ├── types.ts         # ⭐ Edit here to add/remove markets
+│   └── const.ts         # Feature flags
 └── package.json
 ```
 
@@ -79,14 +84,25 @@ cd lighter-strat-analyzer
 npm install
 cd client && npm install && cd ..
 
-# Terminal 1 - Start backend
-npx tsx server/index.ts
+# Create .env file (optional - for FTC feature)
+echo "FTC_ENABLED=true" > .env
 
-# Terminal 2 - Start frontend
-cd client && npm run dev
+# Start development servers
+npm run dev
 ```
 
 Open http://localhost:5173
+
+### Environment Variables
+
+Create a `.env` file in the project root to enable optional features:
+
+```bash
+# Enable Full Timeframe Continuity (FTC) feature
+FTC_ENABLED=true
+```
+
+**Note:** FTC is disabled by default. When enabled, it analyzes all 8 timeframes simultaneously with intelligent caching and rate limiting (max 5 concurrent API requests).
 
 ## 🎨 Customizing Markets
 
@@ -100,7 +116,20 @@ export const DEFAULT_MARKETS: Market[] = [
 ];
 ```
 
-**Available Market IDs:** ETH (0), BTC (1), SOL (2), DOGE (3), 1000PEPE (4), WIF (5), WLD (6), XRP (7), LINK (8), AVAX (9)
+**Get Market IDs from Lighter API:**
+```bash
+curl https://mainnet.zklighter.elliot.ai/api/v1/orderBooks
+```
+
+## 🧪 Testing
+
+```bash
+# Run FTC unit tests
+npx tsx server/__tests__/ftc.test.ts
+
+# Type check
+npx tsc --noEmit
+```
 
 ## 🌐 Deployment
 
@@ -109,14 +138,18 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment guide.
 **Quick Deploy:**
 - **Frontend:** Vercel (auto-deploy on push)
 - **Backend:** Render (auto-deploy on push)
+- **Environment:** Set `FTC_ENABLED=true` in production if desired
 
 ## 📸 Screenshots
 
-### Dashboard
-![Dashboard showing 12 markets with real-time Strat patterns](docs/dashboard.png)
+### Dashboard (Standard View)
+![Dashboard showing 12 markets with real-time Strat patterns](docs/dashboard_FTFC_off.png)
 
 ### Chart Detail
 ![Detailed candlestick chart with pattern labels](docs/chart-detail.png)
+
+### Dashboard (FTC Multi-Timeframe View)
+![Full Timeframe Continuity showing 8 timeframes per market with confluence metrics](docs/dashboard_FTFC_on.png)
 
 ## 📝 License
 
