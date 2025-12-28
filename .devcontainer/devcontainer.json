@@ -1,0 +1,11 @@
+{
+  "name": "antigravity-sandbox",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "workspaceFolder": "/workspace",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind"
+  ],
+  "features": {},
+  "postCreateCommand": "echo 'Container ready'",
+  "remoteUser": "vscode"
+}

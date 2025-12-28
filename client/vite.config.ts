@@ -15,7 +15,15 @@ export default defineConfig({
         },
     },
     server: {
+        host: '0.0.0.0',
         port: 5173,
+        hmr: {
+            overlay: false,
+        },
+        fs: {
+            strict: false,
+            allow: ['..'],
+        },
         proxy: {
             "/api": {
                 target: "http://localhost:3001",
