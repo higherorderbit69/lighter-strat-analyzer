@@ -67,3 +67,41 @@ export const RESOLUTION_MAP: Record<Timeframe, string> = {
     "12h": "12h",
     "1d": "1d",
 };
+
+// ============================================================================
+// Full Timeframe Continuity (FTC) Types
+// ============================================================================
+
+// FTC Timeframes (8 total - 1w excluded due to API reliability issues)
+export const FTC_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "12h", "1d"] as const;
+export type FTCTimeframe = (typeof FTC_TIMEFRAMES)[number];
+
+// Per-timeframe state wrapper (includes pattern + metadata)
+export interface FTCStratState {
+    pattern: string;              // e.g., "2-2 Continuation", "3-1-2U Breakout"
+    direction: "bullish" | "bearish" | "neutral";
+    patternType: StratPatternType; // Raw type: "1", "2U", "2D", "3"
+    lastUpdated: number;          // Unix timestamp (milliseconds)
+    stale: boolean;               // True if data exceeds acceptable staleness threshold
+    error?: string;               // Optional error message if fetch/analysis failed
+}
+
+// Confluence metrics across all timeframes (mechanical facts only)
+export interface MarketConfluence {
+    bullishTimeframes: FTCTimeframe[]; // Timeframes showing bullish patterns (2U)
+    bearishTimeframes: FTCTimeframe[]; // Timeframes showing bearish patterns (2D)
+    totalTimeframes: number;           // Total timeframes analyzed (0-8)
+}
+
+// Multi-timeframe analysis for a single market
+export interface MultiTimeframeAnalysis {
+    marketId: number;
+    symbol: string;
+    // Partial record to handle partial failures gracefully
+    timeframes: Partial<Record<FTCTimeframe, FTCStratState>>;
+    confluence: MarketConfluence;
+    lastUpdated: number; // Unix timestamp (milliseconds) - most recent update across all TFs
+}
+
+// FTC API response type
+export type FTCResponse = MultiTimeframeAnalysis[];

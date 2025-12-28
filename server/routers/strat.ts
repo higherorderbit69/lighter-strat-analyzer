@@ -160,4 +160,50 @@ export const stratRouter = router({
                 };
             }
         }),
+
+    /**
+     * Get Full Timeframe Continuity (FTC) analysis for multiple markets
+     * Analyzes all 8 timeframes (1m-1d) simultaneously with caching
+     * 
+     * Note: Gated behind FTC_ENABLED flag (default OFF)
+     */
+    getFTCMatrix: publicProcedure
+        .input(
+            z.object({
+                markets: z.array(
+                    z.object({
+                        symbol: z.string(),
+                        marketIndex: z.number(),
+                        marketId: z.number(),
+                    })
+                ).max(50, "Maximum 50 markets allowed"), // Prevent accidental overload
+                candleCount: z.number().min(5).max(100).default(20),
+            })
+        )
+        .query(async ({ input }) => {
+            const { markets, candleCount } = input;
+
+            // Feature flag check - FTC disabled by default
+            const { FTC_ENABLED } = await import("@shared/const");
+            if (!FTC_ENABLED) {
+                console.warn("FTC endpoint called but FTC_ENABLED=false, returning empty array");
+                return [];
+            }
+
+            try {
+                // Import FTC service (lazy load to avoid circular deps)
+                const { analyzeMultipleMarketsFTC } = await import("../lib/ftcService");
+
+                const ftcResults = await analyzeMultipleMarketsFTC(markets, candleCount);
+                return ftcResults;
+            } catch (error) {
+                // Log catastrophic errors server-side
+                console.error("CATASTROPHIC ERROR in getFTCMatrix:", error);
+                console.error("Stack trace:", error instanceof Error ? error.stack : "No stack trace available");
+
+                // Return empty array on catastrophic failure
+                // Individual timeframe failures are handled within ftcService
+                return [];
+            }
+        }),
 });
