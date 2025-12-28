@@ -21,9 +21,31 @@ const REFRESH_INTERVALS = [
   { value: "60000", label: "1m" },
 ];
 
+const STORAGE_KEY = "lighter-selected-markets";
+
+// Load selected markets from localStorage or use defaults
+const loadSelectedMarkets = (): Market[] => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Validate that it's an array with proper market shape
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to load selected markets from localStorage:", error);
+  }
+  return DEFAULT_MARKETS;
+};
+
 export default function Home() {
-  const [selectedMarkets, setSelectedMarkets] = useState<Market[]>(DEFAULT_MARKETS);
-  const [timeframe, setTimeframe] = useState<Timeframe>("15m");
+  const [selectedMarkets, setSelectedMarkets] = useState<Market[]>(loadSelectedMarkets);
+  const [timeframe, setTimeframe] = useState<Timeframe>(() => {
+    const stored = localStorage.getItem("lighter-timeframe");
+    return (stored as Timeframe) || "15m";
+  });
   const [refreshInterval, setRefreshInterval] = useState("30000");
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const [, setLocation] = useLocation();
@@ -49,6 +71,20 @@ export default function Home() {
     }
   );
 
+  // Save selected markets to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(selectedMarkets));
+    } catch (error) {
+      console.error("Failed to save selected markets to localStorage:", error);
+    }
+  }, [selectedMarkets]);
+
+  // Save timeframe to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("lighter-timeframe", timeframe);
+  }, [timeframe]);
+
   const handleToggleMarket = useCallback((market: Market) => {
     setSelectedMarkets((prev) => {
       const exists = prev.some((m) => m.marketId === market.marketId);
@@ -61,7 +97,8 @@ export default function Home() {
 
   const handleMarketClick = (analysis: MarketAnalysis) => {
     setSelectedMarket(analysis.market);
-    setLocation(`/chart/${analysis.market.symbol}/${analysis.market.marketIndex}/${timeframe}`);
+    // Use 'default' as placeholder - Chart page will use its own saved timeframe preference
+    setLocation(`/chart/${analysis.market.symbol}/${analysis.market.marketId}/default`);
   };
 
   // Count actionable setups
@@ -197,7 +234,7 @@ export default function Home() {
           </div>
 
           {analyses && analyses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 items-stretch">
               {analyses.map((analysis) => (
                 <MarketCard
                   key={analysis.market.marketIndex}

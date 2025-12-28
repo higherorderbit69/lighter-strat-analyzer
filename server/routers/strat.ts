@@ -125,28 +125,25 @@ export const stratRouter = router({
 
     /**
      * Get candles with pattern analysis for chart page
-     * Uses marketIndex to look up marketId from DEFAULT_MARKETS
+     * Uses marketId directly (no lookup needed)
      */
     getCandles: publicProcedure
         .input(
             z.object({
-                marketIndex: z.number(),
+                marketId: z.number(),
                 timeframe: z.enum([...TIMEFRAMES]),
                 candleCount: z.number().min(5).max(200).default(50),
             })
         )
         .query(async ({ input }) => {
-            const { marketIndex, timeframe, candleCount } = input;
-
-            // Look up market by index
-            const market = DEFAULT_MARKETS.find(m => m.marketIndex === marketIndex);
-            if (!market) {
-                throw new Error(`Market not found for index ${marketIndex}`);
-            }
+            const { marketId, timeframe, candleCount } = input;
 
             try {
-                const rawCandles = await fetchCandles(market.marketId, timeframe as Timeframe, candleCount);
+                const rawCandles = await fetchCandles(marketId, timeframe as Timeframe, candleCount);
+
                 const convertedCandles = rawCandles.map(convertCandle);
+
+
                 const { candles, patternSequence, actionableSetup } = analyzeCandles(convertedCandles);
 
                 return {
@@ -155,7 +152,7 @@ export const stratRouter = router({
                     actionableSetup,
                 };
             } catch (error) {
-                console.error(`Failed to get candles for ${market.symbol}:`, error);
+                console.error(`Failed to get candles for marketId ${marketId}:`, error);
                 return {
                     candles: [],
                     patternSequence: "",

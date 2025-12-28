@@ -8,9 +8,9 @@ const patterns = [
     name: "Inside Bar",
     description: "Consolidation pattern",
     icon: <Minus className="w-4 h-4" />,
-    color: "text-secondary",
-    bg: "bg-secondary/10",
-    glow: "neon-glow-cyan",
+    color: "text-yellow-400",
+    bg: "bg-yellow-400/10",
+    glow: "neon-glow-yellow",
   },
   {
     type: "2U",

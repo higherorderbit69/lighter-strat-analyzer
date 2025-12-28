@@ -41,18 +41,29 @@ const patternColors: Record<StratPatternType, { text: string; bg: string; glow: 
 };
 
 export default function Chart() {
-  const params = useParams<{ symbol: string; marketIndex: string; timeframe: string }>();
+  const params = useParams<{ symbol: string; marketId: string; timeframe: string }>();
   const [, setLocation] = useLocation();
-  
+
   const symbol = params.symbol || "BTC";
-  const marketIndex = parseInt(params.marketIndex || "1", 10);
-  const initialTimeframe = (TIMEFRAMES.includes(params.timeframe as Timeframe) 
-    ? params.timeframe 
-    : "15m") as Timeframe;
-  
-  const [timeframe, setTimeframe] = useState<Timeframe>(initialTimeframe);
+  const marketId = parseInt(params.marketId || "1", 10);
+
+  const [timeframe, setTimeframe] = useState<Timeframe>(() => {
+    // Priority: localStorage > URL param > default
+    // Use same key as Home page so timeframe is shared across pages
+    const stored = localStorage.getItem("lighter-timeframe");
+    if (stored && TIMEFRAMES.includes(stored as Timeframe)) {
+      return stored as Timeframe;
+    }
+    if (params.timeframe && TIMEFRAMES.includes(params.timeframe as Timeframe)) {
+      return params.timeframe as Timeframe;
+    }
+    return "15m";
+  });
   const [refreshInterval, setRefreshInterval] = useState("30000");
-  const [candleCount, setCandleCount] = useState(50);
+  const [candleCount, setCandleCount] = useState(() => {
+    const stored = localStorage.getItem("lighter-chart-candlecount");
+    return stored ? parseInt(stored, 10) : 50;
+  });
 
   // Fetch candle data
   const {
@@ -62,7 +73,7 @@ export default function Chart() {
     dataUpdatedAt,
   } = trpc.strat.getCandles.useQuery(
     {
-      marketIndex,
+      marketId,
       timeframe,
       candleCount,
     },
@@ -72,9 +83,19 @@ export default function Chart() {
     }
   );
 
+  // Save timeframe and candleCount to localStorage
+  useEffect(() => {
+    // Use same key as Home page to keep timeframe in sync
+    localStorage.setItem("lighter-timeframe", timeframe);
+  }, [timeframe]);
+
+  useEffect(() => {
+    localStorage.setItem("lighter-chart-candlecount", candleCount.toString());
+  }, [candleCount]);
+
   const handleTimeframeChange = (tf: Timeframe) => {
     setTimeframe(tf);
-    setLocation(`/chart/${symbol}/${marketIndex}/${tf}`);
+    setLocation(`/chart/${symbol}/${marketId}/${tf}`);
   };
 
   const currentCandle = data?.candles[data.candles.length - 1];
@@ -117,7 +138,7 @@ export default function Chart() {
                 <ArrowLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">Back</span>
               </Button>
-              
+
               <div>
                 <h1 className="text-xl font-bold tracking-wider">
                   <span className="text-primary neon-glow-pink">{symbol}</span>
@@ -132,7 +153,7 @@ export default function Chart() {
             {/* Controls */}
             <div className="flex flex-wrap items-center gap-3">
               <TimeframeSelector selected={timeframe} onChange={handleTimeframeChange} />
-              
+
               <Select value={candleCount.toString()} onValueChange={(v) => setCandleCount(parseInt(v))}>
                 <SelectTrigger className="w-24 h-9 bg-card/50 border-border/50 font-mono text-xs">
                   <SelectValue />
@@ -184,16 +205,16 @@ export default function Chart() {
             <div className="text-center">
               <div className="text-xs text-muted-foreground tracking-wider mb-1">PRICE</div>
               <div className="text-2xl font-bold font-mono text-foreground">
-                ${currentCandle?.close.toLocaleString(undefined, { 
-                  minimumFractionDigits: 2, 
-                  maximumFractionDigits: 6 
+                ${currentCandle?.close.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 6
                 }) || "--"}
               </div>
             </div>
           </HudFrame>
 
           {/* Current Pattern */}
-          <HudFrame 
+          <HudFrame
             variant={currentPattern === "3" ? "alert" : currentPattern ? "highlight" : "default"}
             className="bg-card/30"
           >
@@ -263,8 +284,8 @@ export default function Chart() {
               <div className="flex items-center gap-3">
                 <Zap className={cn(
                   "w-8 h-8",
-                  data.actionableSetup.direction === "bullish" 
-                    ? "text-[oklch(0.75_0.22_145)]" 
+                  data.actionableSetup.direction === "bullish"
+                    ? "text-[oklch(0.75_0.22_145)]"
                     : "text-destructive"
                 )} />
                 <div>

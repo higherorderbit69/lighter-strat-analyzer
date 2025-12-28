@@ -1,8 +1,8 @@
 // Strat Pattern Types
 export type StratPatternType = "1" | "2U" | "2D" | "3";
 
-// Timeframe options
-export const TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "12h", "1d", "1w"] as const;
+// Timeframe options (1w removed - API has incomplete weekly data)
+export const TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "12h", "1d"] as const;
 export type Timeframe = (typeof TIMEFRAMES)[number];
 
 // Market definition
@@ -66,5 +66,4 @@ export const RESOLUTION_MAP: Record<Timeframe, string> = {
     "4h": "4h",
     "12h": "12h",
     "1d": "1d",
-    "1w": "1w",
 };

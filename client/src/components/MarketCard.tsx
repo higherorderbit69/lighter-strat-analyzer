@@ -11,9 +11,9 @@ interface MarketCardProps {
 
 const patternStyles: Record<StratPatternType, { bg: string; text: string; glow: string; icon: React.ReactNode }> = {
   "1": {
-    bg: "bg-secondary/10",
-    text: "text-secondary",
-    glow: "neon-glow-cyan",
+    bg: "bg-yellow-400/10",
+    text: "text-yellow-400",
+    glow: "neon-glow-yellow",
     icon: <Minus className="w-4 h-4" />,
   },
   "2U": {
@@ -56,14 +56,14 @@ export function MarketCard({ analysis, onClick, selected }: MarketCardProps) {
     <div
       onClick={onClick}
       className={cn(
-        "cursor-pointer transition-all duration-300 hover:scale-[1.02]",
+        "h-full cursor-pointer transition-all duration-300 hover:scale-[1.02]",
         selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
       )}
     >
       <HudFrame
         variant={actionableSetup ? "highlight" : "default"}
         className={cn(
-          "bg-card/50 backdrop-blur-sm",
+          "h-full bg-card/50 backdrop-blur-sm",
           actionableSetup && "pulse-border"
         )}
       >
@@ -137,8 +137,8 @@ export function MarketCard({ analysis, onClick, selected }: MarketCardProps) {
                 )} />
                 <span className={cn(
                   "text-xs font-bold tracking-wider",
-                  actionableSetup.direction === "bullish" 
-                    ? "text-[oklch(0.75_0.22_145)] neon-glow-green" 
+                  actionableSetup.direction === "bullish"
+                    ? "text-[oklch(0.75_0.22_145)] neon-glow-green"
                     : "text-destructive neon-glow-red"
                 )}>
                   {actionableSetup.pattern} - {actionableSetup.direction.toUpperCase()}

@@ -85,9 +85,30 @@ export async function fetchCandles(
     const data: CandlesticksResponse = await response.json();
     const allCandles = data.candlesticks || [];
 
-    // The API may return more candles than requested, so we slice to get the last N
+    // Deduplicate candles by timestamp (API sometimes returns duplicates, especially for longer timeframes)
+    const candleMap = new Map<number, LighterCandlestick>();
+    for (const candle of allCandles) {
+        // Keep the last occurrence of each timestamp (most recent data)
+        candleMap.set(candle.timestamp, candle);
+    }
+
+    // Convert back to array and sort by timestamp ascending
+    const uniqueCandles = Array.from(candleMap.values()).sort((a, b) => a.timestamp - b.timestamp);
+
+    // Filter out placeholder candles:
+    // 1. Candles with zero volume AND all OHLC values equal (flat placeholder)
+    // 2. Candles with future timestamps (beyond current time + 1 week buffer)
+    const now = Date.now();
+    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+    const validCandles = uniqueCandles.filter(c => {
+        const isFlatPlaceholder = c.volume0 === 0 && c.open === c.high && c.high === c.low && c.low === c.close;
+        const isFuture = c.timestamp > now + oneWeekMs;
+        // Keep candle if it's NOT a flat placeholder AND NOT too far in the future
+        return !isFlatPlaceholder && !isFuture;
+    });
+
     // Take the most recent candles (end of array)
-    return allCandles.slice(-countBack);
+    return validCandles.slice(-countBack);
 }
 
 /**
@@ -102,6 +123,7 @@ export function convertCandle(candle: LighterCandlestick): {
     volume: number;
 } {
     return {
+        // Timestamp is already in milliseconds from the API
         timestamp: candle.timestamp,
         open: candle.open,
         high: candle.high,
