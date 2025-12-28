@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RefreshCw, Activity, Zap, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
+import { Switch } from "@/components/ui/switch";
+import { FTCTimeframeGrid } from "@/components/FTCTimeframeGrid";
 
 const REFRESH_INTERVALS = [
   { value: "0", label: "Manual" },
@@ -49,6 +51,7 @@ export default function Home() {
   const [refreshInterval, setRefreshInterval] = useState("30000");
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const [, setLocation] = useLocation();
+  const [ftcEnabled, setFtcEnabled] = useState(false);
 
   // Fetch all available markets
   const { data: allMarkets, isLoading: marketsLoading } = trpc.strat.getMarkets.useQuery();
@@ -66,6 +69,23 @@ export default function Home() {
       candleCount: 20,
     },
     {
+      refetchInterval: refreshInterval === "0" ? false : parseInt(refreshInterval),
+      staleTime: 5000,
+    }
+  );
+
+  // Fetch FTC data when enabled
+  const {
+    data: ftcAnalyses,
+    isLoading: ftcLoading,
+    refetch: refetchFTC,
+  } = trpc.strat.getFTCMatrix.useQuery(
+    {
+      markets: selectedMarkets,
+      candleCount: 20,
+    },
+    {
+      enabled: ftcEnabled,
       refetchInterval: refreshInterval === "0" ? false : parseInt(refreshInterval),
       staleTime: 5000,
     }
@@ -164,6 +184,18 @@ export default function Home() {
                 onToggleMarket={handleToggleMarket}
                 isLoading={marketsLoading}
               />
+
+              {/* FTC Toggle */}
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-card/50 rounded-lg border border-border/50">
+                <span className="text-xs font-mono tracking-wider text-muted-foreground">
+                  MULTI-TF
+                </span>
+                <Switch
+                  checked={ftcEnabled}
+                  onCheckedChange={setFtcEnabled}
+                  title="Toggle Full Timeframe Continuity view"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -255,6 +287,62 @@ export default function Home() {
             </HudFrame>
           )}
         </div>
+
+        {/* FTC Grid View (when enabled) */}
+        {ftcEnabled && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold tracking-widest text-muted-foreground">
+                FULL TIMEFRAME CONTINUITY
+              </h2>
+              {ftcLoading && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <RefreshCw className="w-3 h-3 animate-spin" />
+                  Analyzing...
+                </div>
+              )}
+            </div>
+
+            {ftcAnalyses && ftcAnalyses.length > 0 ? (
+              <div className="space-y-3">
+                {ftcAnalyses.map((ftcAnalysis) => (
+                  <HudFrame key={ftcAnalysis.marketId} className="bg-card/30 p-4">
+                    <div className="space-y-3">
+                      {/* Market Header */}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-mono font-bold text-foreground">
+                            {ftcAnalysis.symbol}
+                          </h3>
+                          <div className="text-xs text-muted-foreground font-mono">
+                            {ftcAnalysis.confluence.bullishTimeframes.length}↑ /
+                            {ftcAnalysis.confluence.bearishTimeframes.length}↓ /
+                            {ftcAnalysis.confluence.totalTimeframes} total
+                          </div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Updated: {new Date(ftcAnalysis.lastUpdated).toLocaleTimeString()}
+                        </div>
+                      </div>
+
+                      {/* Timeframe Grid */}
+                      <FTCTimeframeGrid analysis={ftcAnalysis} />
+                    </div>
+                  </HudFrame>
+                ))}
+              </div>
+            ) : (
+              <HudFrame className="bg-card/30">
+                <div className="text-center py-8">
+                  <Activity className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {ftcLoading ? "Loading FTC data..." : "FTC is disabled on the server (or no data returned)"}
+                  </p>
+                </div>
+              </HudFrame>
+            )}
+          </div>
+        )}
       </main>
 
       {/* Footer */}

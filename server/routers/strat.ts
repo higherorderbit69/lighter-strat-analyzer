@@ -183,9 +183,9 @@ export const stratRouter = router({
         .query(async ({ input }) => {
             const { markets, candleCount } = input;
 
-            // Feature flag check - FTC disabled by default
-            const { FTC_ENABLED } = await import("@shared/const");
-            if (!FTC_ENABLED) {
+            // Feature flag check - read directly from process.env (not cached import)
+            const ftcEnabled = process.env.FTC_ENABLED === "true";
+            if (!ftcEnabled) {
                 console.warn("FTC endpoint called but FTC_ENABLED=false, returning empty array");
                 return [];
             }
