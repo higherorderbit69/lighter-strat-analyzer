@@ -24,8 +24,8 @@ export const DEFAULT_MARKETS: Market[] = [
     { symbol: "XRP", marketIndex: 7, marketId: 7 },
     { symbol: "XMR", marketIndex: 8, marketId: 77 },
     { symbol: "ZEC", marketIndex: 9, marketId: 90 },
-    { symbol: "FARTCOIN", marketIndex: 10, marketId: 21 },
-    { symbol: "PUMP", marketIndex: 11, marketId: 45 },
+    { symbol: "PUMP", marketIndex: 10, marketId: 45 },
+    { symbol: "TAO", marketIndex: 11, marketId: 13 },
 ];
 
 // Candle with Strat classification
