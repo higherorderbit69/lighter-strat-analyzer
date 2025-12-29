@@ -206,4 +206,55 @@ export const stratRouter = router({
                 return [];
             }
         }),
+
+    /**
+     * Get FTC Signals - actionable trading signals from multi-timeframe analysis
+     * Phase 1: CA (Chop Avoidance) and HTFBC (HTF Bias Confirmation)
+     * 
+     * Returns:
+     * - signals: High-conviction signals (>= 40 conviction)
+     * - nearMisses: Potential setups (25-39 conviction)
+     */
+    getFTCSignals: publicProcedure
+        .input(
+            z.object({
+                markets: z.array(
+                    z.object({
+                        symbol: z.string(),
+                        marketIndex: z.number(),
+                        marketId: z.number(),
+                    })
+                ).max(50, "Maximum 50 markets allowed"),
+                candleCount: z.number().min(5).max(100).default(20),
+            })
+        )
+        .query(async ({ input }) => {
+            const { markets, candleCount } = input;
+
+            // Feature flag check - read directly from process.env
+            const ftcEnabled = process.env.FTC_ENABLED === "true";
+            if (!ftcEnabled) {
+                console.warn("getFTCSignals called but FTC_ENABLED=false, returning empty");
+                return { signals: [], nearMisses: [] };
+            }
+
+            try {
+                // Get FTC matrix data (reuse existing function)
+                const { analyzeMultipleMarketsFTC } = await import("../lib/ftcService");
+                const ftcResults = await analyzeMultipleMarketsFTC(markets, candleCount);
+
+                // Generate signals from FTC data
+                const { generateSignalResponse } = await import("../signalEngine");
+                const signalResponse = generateSignalResponse(ftcResults);
+
+                return signalResponse;
+            } catch (error) {
+                // Log catastrophic errors server-side
+                console.error("CATASTROPHIC ERROR in getFTCSignals:", error);
+                console.error("Stack trace:", error instanceof Error ? error.stack : "No stack trace available");
+
+                // Return empty on catastrophic failure
+                return { signals: [], nearMisses: [] };
+            }
+        }),
 });

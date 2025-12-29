@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
 import { Switch } from "@/components/ui/switch";
 import { FTCTimeframeGrid } from "@/components/FTCTimeframeGrid";
+import { SignalPanel } from "@/components/SignalPanel";
 
 const REFRESH_INTERVALS = [
   { value: "0", label: "Manual" },
@@ -83,6 +84,22 @@ export default function Home() {
     isLoading: ftcLoading,
     refetch: refetchFTC,
   } = trpc.strat.getFTCMatrix.useQuery(
+    {
+      markets: selectedMarkets,
+      candleCount: 20,
+    },
+    {
+      enabled: ftcEnabled,
+      refetchInterval: refreshInterval === "0" ? false : parseInt(refreshInterval),
+      staleTime: 5000,
+    }
+  );
+
+  // Fetch FTC signals when enabled
+  const {
+    data: ftcSignals,
+    isLoading: signalsLoading,
+  } = trpc.strat.getFTCSignals.useQuery(
     {
       markets: selectedMarkets,
       candleCount: 20,
@@ -299,6 +316,14 @@ export default function Home() {
         {/* FTC Grid View (when enabled) */}
         {ftcEnabled && (
           <div className="space-y-4">
+            {/* Top Signals Panel */}
+            {ftcSignals && (
+              <SignalPanel
+                signals={ftcSignals.signals || []}
+                nearMisses={ftcSignals.nearMisses || []}
+              />
+            )}
+
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-bold tracking-widest text-muted-foreground">
                 FULL TIMEFRAME CONTINUITY
